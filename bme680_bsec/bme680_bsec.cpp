@@ -70,9 +70,11 @@ void BME680BSECComponent::dump_config() {
   ESP_LOGCONFIG(TAG, "  IAQ Mode: %s", this->iaq_mode_ == IAQ_MODE_STATIC ? "Static" : "Mobile");
   ESP_LOGCONFIG(TAG, "  Sample Rate: %s", this->sample_rate_ == SAMPLE_RATE_ULP ? "ULP" : "LP");
   ESP_LOGCONFIG(TAG, "  State Save Interval: %ims", this->state_save_interval_);
+  ESP_LOGCONFIG(TAG, "  Height above sealevel: %.2f", this->height_above_sealevel_);
 
   LOG_SENSOR("  ", "Temperature", this->temperature_sensor_);
   LOG_SENSOR("  ", "Pressure", this->pressure_sensor_);
+  LOG_SENSOR("  ", "Pressure at sealevel", this->pressure_sealevel_sensor_);
   LOG_SENSOR("  ", "Humidity", this->humidity_sensor_);
   LOG_SENSOR("  ", "Gas Resistance", this->gas_resistance_sensor_);
   LOG_SENSOR("  ", "IAQ", this->iaq_sensor_);
@@ -91,6 +93,8 @@ void BME680BSECComponent::loop() {
     this->publish_state_(this->temperature_sensor_, this->bsec_.temperature);
     this->publish_state_(this->humidity_sensor_, this->bsec_.humidity);
     this->publish_state_(this->pressure_sensor_, this->bsec_.pressure / 100.0);
+    this->publish_state_(this->pressure_sealevel_sensor_, 
+                          this->calculate_pressure_at_sealevel(this->bsec_.pressure / 100.0));
     this->publish_state_(this->gas_resistance_sensor_, this->bsec_.gasResistance);
     this->publish_state_(this->iaq_sensor_, this->get_iaq_());
     this->publish_state_(this->iaq_accuracy_text_sensor_, IAQ_ACCURACY_STATES[this->get_iaq_accuracy_()]);
@@ -99,6 +103,21 @@ void BME680BSECComponent::loop() {
     this->publish_state_(this->breath_voc_equivalent_sensor_, this->bsec_.breathVocEquivalent);
   }
 }
+
+float BME680BSECComponent::calculate_pressure_at_sealevel(float pressure_at_height) {
+  //https://de.wikipedia.org/wiki/Barometrische_H%C3%B6henformel#Internationale_H%C3%B6henformel
+  //https://en.wikipedia.org/wiki/Barometric_formula
+  //For simplification we always use 15°C (=288.15 °K) for calculation.
+  if (abs(this->height_above_sealevel_) > 0.01) {
+    const float TEMP_GRADIENT = 0.0065;
+    float value = pressure_at_height / pow(1 - TEMP_GRADIENT * this->height_above_sealevel_ / 288.15, 5.255);
+    return value;
+  } else {
+    return pressure_at_height;
+  }
+
+}
+
 
 void BME680BSECComponent::publish_state_(sensor::Sensor *sensor, float value, bool change_only) {
   if (!sensor || (change_only && sensor->has_state() && sensor->state == value)) {
@@ -122,6 +141,8 @@ void BME680BSECComponent::set_temperature_offset(float offset) {
 }
 
 void BME680BSECComponent::set_iaq_mode(IAQMode iaq_mode) { this->iaq_mode_ = iaq_mode; }
+
+void BME680BSECComponent::set_height_above_sealevel(float height) {this->height_above_sealevel_ = height;}
 
 void BME680BSECComponent::set_sample_rate(SampleRate sample_rate) { this->sample_rate_ = sample_rate; }
 

@@ -9,6 +9,7 @@ from . import BME680BSECComponent, CONF_BME680_BSEC_ID
 
 DEPENDENCIES = ['bme680_bsec']
 
+CONF_PRESSURE_SEALVEL = 'pressure_at_sealevel';
 CONF_IAQ = 'iaq'
 CONF_IAQ_ACCURACY = 'iaq_accuracy'
 CONF_CO2_EQUIVALENT = 'co2_equivalent'
@@ -20,6 +21,7 @@ ICON_TEST_TUBE = 'mdi:test-tube'
 TYPES = {
     CONF_TEMPERATURE: 'set_temperature_sensor',
     CONF_PRESSURE: 'set_pressure_sensor',
+    CONF_PRESSURE_SEALVEL: 'set_pressure_sealevel_sensor',
     CONF_HUMIDITY: 'set_humidity_sensor',
     CONF_GAS_RESISTANCE: 'set_gas_resistance_sensor',
     CONF_IAQ: 'set_iaq_sensor',
@@ -33,6 +35,8 @@ CONFIG_SCHEMA = cv.Schema({
     cv.Optional(CONF_TEMPERATURE):
         sensor.sensor_schema(UNIT_CELSIUS, ICON_THERMOMETER, 1),
     cv.Optional(CONF_PRESSURE):
+        sensor.sensor_schema(UNIT_HECTOPASCAL, ICON_GAUGE, 1),
+    cv.Optional(CONF_PRESSURE_SEALVEL):
         sensor.sensor_schema(UNIT_HECTOPASCAL, ICON_GAUGE, 1),
     cv.Optional(CONF_HUMIDITY):
         sensor.sensor_schema(UNIT_PERCENT, ICON_WATER_PERCENT, 1),

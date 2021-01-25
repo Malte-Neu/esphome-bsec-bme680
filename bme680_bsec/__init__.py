@@ -10,6 +10,7 @@ MULTI_CONF = True
 
 CONF_BME680_BSEC_ID = 'bme680_bsec_id'
 CONF_TEMPERATURE_OFFSET = 'temperature_offset'
+CONF_HEIGHT_ABOVE_SEALEVEL = 'height_above_sealevel';
 CONF_IAQ_MODE = 'iaq_mode'
 CONF_SAMPLE_RATE = 'sample_rate'
 CONF_STATE_SAVE_INTERVAL = 'state_save_interval'
@@ -33,6 +34,7 @@ BME680BSECComponent = bme680_bsec_ns.class_('BME680BSECComponent', cg.Component,
 CONFIG_SCHEMA = cv.Schema({
     cv.GenerateID(): cv.declare_id(BME680BSECComponent),
     cv.Optional(CONF_TEMPERATURE_OFFSET, default=0): cv.temperature,
+    cv.Optional(CONF_HEIGHT_ABOVE_SEALEVEL, default = 0.0): cv.distance,
     cv.Optional(CONF_IAQ_MODE, default='STATIC'):
         cv.enum(IAQ_MODE_OPTIONS, upper=True),
     cv.Optional(CONF_SAMPLE_RATE, default='LP'):
@@ -47,6 +49,7 @@ def to_code(config):
     yield i2c.register_i2c_device(var, config)
 
     cg.add(var.set_temperature_offset(config[CONF_TEMPERATURE_OFFSET]))
+    cg.add(var.set_height_above_sealevel(config[CONF_HEIGHT_ABOVE_SEALEVEL]))
     cg.add(var.set_iaq_mode(config[CONF_IAQ_MODE]))
     cg.add(var.set_sample_rate(config[CONF_SAMPLE_RATE]))
     cg.add(var.set_state_save_interval(config[CONF_STATE_SAVE_INTERVAL].total_milliseconds))

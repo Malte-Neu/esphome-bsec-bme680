@@ -47,6 +47,12 @@ bme680_bsec:
     # Default: 0
     temperature_offset: 0
 
+    # Sensor height
+    # -------------
+    # Necessary to calculate the air pressure at sealevel
+    # Default: 0
+    height_above_sealevel: 150
+
     # IAQ calculation mode
     # --------------------
     # Available options:
@@ -78,6 +84,11 @@ sensor:
     pressure:
       # Pressure in hPa
       name: "BME680 Pressure"
+      filters:
+        - median
+    pressure_at_sealevel:
+      # Pressure calculated in hPa at sealevel
+      name: "BME680 Pressure at sealevel"
       filters:
         - median
     humidity:

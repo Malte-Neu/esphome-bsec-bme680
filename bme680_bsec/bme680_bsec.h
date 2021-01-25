@@ -7,6 +7,7 @@
 #include "esphome/components/text_sensor/text_sensor.h"
 #include "esphome/components/i2c/i2c.h"
 #include "esphome/core/preferences.h"
+#include <cmath>
 #include <bsec.h>
 #include <map>
 
@@ -26,12 +27,14 @@ enum SampleRate {
 class BME680BSECComponent : public Component, public i2c::I2CDevice {
  public:
   void set_temperature_offset(float offset);
+  void set_height_above_sealevel(float height);
   void set_iaq_mode(IAQMode iaq_mode);
   void set_sample_rate(SampleRate sample_rate);
   void set_state_save_interval(uint32_t interval);
 
   void set_temperature_sensor(sensor::Sensor *temperature_sensor) { temperature_sensor_ = temperature_sensor; }
   void set_pressure_sensor(sensor::Sensor *pressure_sensor) { pressure_sensor_ = pressure_sensor; }
+  void set_pressure_sealevel_sensor(sensor::Sensor *pressure_sealevel_sensor) { pressure_sealevel_sensor_ = pressure_sealevel_sensor;}
   void set_humidity_sensor(sensor::Sensor *humidity_sensor) { humidity_sensor_ = humidity_sensor; }
   void set_gas_resistance_sensor(sensor::Sensor *gas_resistance_sensor) {
     gas_resistance_sensor_ = gas_resistance_sensor;
@@ -49,6 +52,7 @@ class BME680BSECComponent : public Component, public i2c::I2CDevice {
   void set_breath_voc_equivalent_sensor(sensor::Sensor *breath_voc_equivalent_sensor) {
     breath_voc_equivalent_sensor_ = breath_voc_equivalent_sensor;
   }
+
 
   static std::map<uint8_t, BME680BSECComponent *> instances;
   static int8_t read_bytes_wrapper(uint8_t address, uint8_t a_register, uint8_t *data, uint16_t len);
@@ -72,6 +76,7 @@ class BME680BSECComponent : public Component, public i2c::I2CDevice {
   bsec_library_return_t last_bsec_status_{BSEC_OK};
   int8_t last_bme680_status_{BME680_OK};
   float temperature_offset_{0};
+  float height_above_sealevel_{0};
   ESPPreferenceObject bsec_state_;
   uint32_t state_save_interval_{21600000};  // 6 hours - 4 times a day
   IAQMode iaq_mode_{IAQ_MODE_STATIC};
@@ -79,6 +84,7 @@ class BME680BSECComponent : public Component, public i2c::I2CDevice {
 
   sensor::Sensor *temperature_sensor_;
   sensor::Sensor *pressure_sensor_;
+  sensor::Sensor *pressure_sealevel_sensor_;
   sensor::Sensor *humidity_sensor_;
   sensor::Sensor *gas_resistance_sensor_;
   sensor::Sensor *iaq_sensor_;
@@ -86,6 +92,8 @@ class BME680BSECComponent : public Component, public i2c::I2CDevice {
   sensor::Sensor *iaq_accuracy_sensor_;
   sensor::Sensor *co2_equivalent_sensor_;
   sensor::Sensor *breath_voc_equivalent_sensor_;
+
+  float calculate_pressure_at_sealevel(float pressure_at_height);
 };
 
 }  // namespace bme680_bsec
